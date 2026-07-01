@@ -37,7 +37,8 @@
             console.log("Step 1 Success! Captured Raw IP String:", cleanIp);
 
             // Step 2: Feed that precise clean text string into the ipapi URL pathway
-            return fetch(`https://https://ipapi.co{cleanIp}/json/`);
+            // FIXED: Cleaned up the protocol, added the missing '$' and the forward slash
+            return fetch(`https://ipapi.co/${cleanIp}/json/`);
         })
         .then(response => {
             if (!response.ok) {
