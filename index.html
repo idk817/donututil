@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tracking Test Site</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; line-height: 1.6; }
+        .box { background: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 5px solid #007bff; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome to My Website</h1>
+    <p>This is a live test page hosted on GitHub Pages.</p>
+
+    <div class="box">
+        <h3>Your Connection Data (Loaded via API):</h3>
+        <p><strong>IP Address:</strong> <span id="ip-address">Loading...</span></p>
+        <p><strong>Location:</strong> <span id="location">Loading...</span></p>
+        <p><strong>Internet Provider:</strong> <span id="isp">Loading...</span></p>
+    </div>
+
+    <script>
+        // This script automatically runs when someone opens your page
+        fetch('https://ipapi.co')
+            .then(response => response.json())
+            .then(data => {
+                // Update the text on the screen with the data from the API
+                document.getElementById('ip-address').innerText = data.ip || "Not found";
+                document.getElementById('location').innerText = `${data.city}, ${data.region}, ${data.country_name}` || "Not found";
+                document.getElementById('isp').innerText = data.org || "Not found";
+                
+                // Optional: Log it to the browser console for testing
+                console.log("Full API Response Data:", data);
+            })
+            .catch(error => {
+                console.error('Error fetching IP data:', error);
+                document.getElementById('ip-address').innerText = "Blocked by Ad-Blocker/Error";
+            });
+    </script>
+
+</body>
+</html>
