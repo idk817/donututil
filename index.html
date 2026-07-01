@@ -22,23 +22,47 @@
     </div>
 
     <script>
-        // This script automatically runs when someone opens your page
-        fetch('https://ipapi.co')
-            .then(response => response.json())
-            .then(data => {
-                // Update the text on the screen with the data from the API
-                document.getElementById('ip-address').innerText = data.ip || "Not found";
-                document.getElementById('location').innerText = `${data.city}, ${data.region}, ${data.country_name}` || "Not found";
-                document.getElementById('isp').innerText = data.org || "Not found";
-                
-                // Optional: Log it to the browser console for testing
-                console.log("Full API Response Data:", data);
-            })
-            .catch(error => {
-                console.error('Error fetching IP data:', error);
-                document.getElementById('ip-address').innerText = "Blocked by Ad-Blocker/Error";
-            });
-    </script>
+    // Step 1: Fetch the raw plain text from the exact link you provided
+    fetch('https://api.ipify.org/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to reach ipify plain text service');
+            }
+            // Use .text() because the response contains no JSON markup
+            return response.text(); 
+        })
+        .then(rawIpText => {
+            // Trim any accidental hidden spacing around the IP string
+            const cleanIp = rawIpText.trim();
+            console.log("Step 1 Success! Captured Raw IP String:", cleanIp);
+
+            // Step 2: Feed that precise clean text string into the ipapi URL pathway
+            return fetch(`https://https://ipapi.co{cleanIp}/json/`);
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('ipapi registry rejected the request: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Step 3: Populate your box fields using the validated data payload
+            document.getElementById('ip-address').innerText = data.ip || "Not found";
+            
+            const city = data.city || "";
+            const region = data.region || "";
+            const country = data.country_name || "";
+            document.getElementById('location').innerText = `${city}, ${region}, ${country}` || "Not found";
+            
+            document.getElementById('isp').innerText = data.org || "Not found";
+            
+            console.log("Step 2 Success! Full Location Payload:", data);
+        })
+        .catch(error => {
+            console.error('Data chain error:', error);
+            document.getElementById('ip-address').innerText = "Data fetch failed";
+        });
+</script>
 
 </body>
 </html>
