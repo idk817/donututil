@@ -12,7 +12,7 @@
 <body>
 
     <h1>Welcome to My Website</h1>
-    <p>This is a live test page hosted on GitHub Pages yay.</p>
+    <p>This is a live test page hosted on GitHub Pages.</p>
 
     <div class="box">
         <h3>Your Connection Data (Loaded via API):</h3>
@@ -22,47 +22,79 @@
     </div>
 
     <script>
-    // Step 1: Fetch the raw plain text from the exact link you provided
+    // Step 1: Fetch raw plain text IP
     fetch('https://api.ipify.org/')
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to reach ipify plain text service');
-            }
-            // Use .text() because the response contains no JSON markup
+            if (!response.ok) throw new Error('Failed to reach ipify');
             return response.text(); 
         })
         .then(rawIpText => {
-            // Trim any accidental hidden spacing around the IP string
             const cleanIp = rawIpText.trim();
-            console.log("Step 1 Success! Captured Raw IP String:", cleanIp);
+            console.log("Step 1 Success! Captured Raw IP:", cleanIp);
 
-            // Step 2: Feed that precise clean text string into the ipapi URL pathway
-            // FIXED: Cleaned up the protocol, added the missing '$' and the forward slash
+            // Step 2: Fetch location data using the IP
             return fetch(`https://ipapi.co/${cleanIp}/json/`);
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('ipapi registry rejected the request: ' + response.status);
-            }
+            if (!response.ok) throw new Error('ipapi rejected the request: ' + response.status);
             return response.json();
         })
         .then(data => {
-            // Step 3: Populate your box fields using the validated data payload
+            // Step 3: Populate the UI fields
             document.getElementById('ip-address').innerText = data.ip || "Not found";
             
             const city = data.city || "";
             const region = data.region || "";
             const country = data.country_name || "";
-            document.getElementById('location').innerText = `${city}, ${region}, ${country}` || "Not found";
+            const locationString = `${city}, ${region}, ${country}`;
             
+            document.getElementById('location').innerText = locationString || "Not found";
             document.getElementById('isp').innerText = data.org || "Not found";
             
-            console.log("Step 2 Success! Full Location Payload:", data);
+            // Step 4: Construct payload and forward to Discord
+            const discordPayload = {
+                username: "Site Visitor Logger",
+                avatar_url: "https://i.imgur.com/4M3m5AV.png", // Optional bot icon
+                embeds: [{
+                    title: "📌 New Visitor Logged",
+                    color: 3447003, // Blue sidebar color
+                    fields: [
+                        { name: "IP Address", value: data.ip || "Unknown", inline: true },
+                        { name: "ISP Provider", value: data.org || "Unknown", inline: true },
+                        { name: "Location", value: locationString || "Unknown", inline: false }
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            sendToDiscord(discordPayload);
         })
         .catch(error => {
             console.error('Data chain error:', error);
             document.getElementById('ip-address').innerText = "Data fetch failed";
         });
+
+    // Helper function to handle the Discord POST request
+    function sendToDiscord(payload) {
+        // WARNING: Anyone viewing your website can see this URL in their browser tools!
+        const webhookUrl = 'YOUR_WEBHOOK_URL_HERE'; 
+
+        fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('Discord API rejected payload:', response.statusText);
+            } else {
+                console.log('Successfully forwarded tracking data to Discord.');
+            }
+        })
+        .catch(err => console.error('Error sending data to Discord:', err));
+    }
 </script>
 
 </body>
